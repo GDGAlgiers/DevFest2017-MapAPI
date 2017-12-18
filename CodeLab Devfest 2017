@@ -1,0 +1,239 @@
+													------------------
+													|KONNICHIWA MINA |
+													------------------
+                                    ---------------------------------------------------
+									|Codelab DevFest : Maps / Cloud FireStore / Places|
+									---------------------------------------------------
+
+1- Add needed dependecies to app/gradle: 
+========================================
+ 	compile 'com.google.firebase:firebase-firestore:11.6.0'           #FireStore
+    compile 'com.google.android.gms:play-services-maps:11.6.0'        #Maps
+    compile 'com.google.android.gms:play-services-places:11.6.0'      #Places
+
+2- Create Our UI:
+=================
+-----------------------------------------------------------------			
+	<LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+
+        <!-- Button To add data on FireStore -->
+		    <Button
+		        android:id="@+id/btn_db"
+		        android:layout_width="160dp"
+		        android:layout_height="50dp"
+		        android:text="Add to FireStore"
+		        android:layout_marginTop="25dp"
+		        tools:ignore="MissingConstraints" />
+
+		    <!-- Button to view on Map -->
+		    <Button
+		        android:id="@+id/btn_map"
+		        android:layout_width="130dp"
+		        android:layout_height="50dp"
+		        android:layout_marginTop="25dp"
+		        android:text="View On Map"
+		        tools:ignore="MissingConstraints" />
+
+    </LinearLayout>
+-----------------------------------------------------------------
+
+3-Maps:
+=======
+-Generate Google Maps API Key:
+
+	-Locate the debug keystore & list the SHA-1 fingerprint:
+	■ macOS and Linux: ~/.android/
+		- keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+
+	■ Windows: C:\Users\your_user_name\.android\
+		- keytool -list -v -keystore "%USERPROFILE%\.android\debug.keystore" -alias androiddebugkey -storepass android -keypass android
+
+	-Console url : https://console.developers.google.com/
+	■ Sha1 + Package = API Key      								 #We are almost done here :D !
+
+
+-Add the Key to our Project (/manifest.xml):
+
+  <meta-data
+      android:name="com.google.android.geo.API_KEY"
+      android:value="YOUR_API_KEY"/>
+
+-Create MapActivity / map.xml:
+
+ -------------------------------------------------------------------------------------------
+	public class MapActivity extends FragmentActivity implements OnMapReadyCallback {
+
+    private GoogleMap mMap ;
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.maps);
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+    }
+
+    @Override
+    public void onMapReady(GoogleMap googleMap) {
+        mMap = googleMap;
+
+        // Add a marker in Algiers, ESI, and move the camera.
+        LatLng esi = new LatLng(36.699237, 3.175188);
+        mMap.addMarker(new MarkerOptions().position(esi).title("We are Here !"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(esi,5));
+    }
+ }
+ ------------------------------------------------------------------------------------------
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:id="@+id/map"
+        tools:context=".MapActivity"
+        android:name="com.google.android.gms.maps.SupportMapFragment" />
+ -------------------------------------------------------------------------------------------
+ 					<< The Map must be ready to display >>
+
+3- Places:
+==========
+Activate Place API :
+-Console url : https://console.developers.google.com/
+
+Update The UI:
+-------------------------------------------------------------------------------------------
+<!-- Places Auto complete -->
+    <fragment
+        android:id="@+id/place_autocomplete_fragment"
+        android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="33dp"
+        tools:ignore="MissingConstraints"
+        android:layout_marginTop="20dp"/>
+-------------------------------------------------------------------------------------------
+
+Update MainActivity : 
+	--FragmentActivity implements OnConnectionFailedListener                                      #Implements methods
+
+GoogleApiClient :     
+    -- private GoogleApiClient mGoogleApiClient;
+------------------------------------------------------
+ /** init GoogleApiClient **/
+        mGoogleApiClient = new GoogleApiClient
+                .Builder(this)
+                .addApi(Places.GEO_DATA_API)
+                .addApi(Places.PLACE_DETECTION_API)
+                .enableAutoManage(this, this)
+                .build();
+-----------------------------------------------------
+
+Init Places Autocomplete:
+------------------------------------------------------------------------------------------
+  ++Map<String, Object> info;   				 #global declaration
+
+  /*** collect data , put it in Hashmap ***/
+        PlaceAutocompleteFragment autocompleteFragment = (PlaceAutocompleteFragment)
+                getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+
+        autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
+            @Override
+            public void onPlaceSelected(Place place) {
+                // TODO: Get info about the selected place.
+                info = new HashMap<>();
+                info.put("name",(String) place.getName());
+
+                String latlng = String.valueOf(place.getLatLng()).replace("lat/lng:","");
+                String latlng2 = latlng.replace("(","");
+                String latlng3 = latlng2.replace(")","");
+                info.put("latlng",latlng3);
+
+                info.put("address",(String) place.getAddress());
+
+            }
+
+            @Override
+            public void onError(Status status) {
+                Log.i("Failed Place: ", "An error occurred: " + status);
+            }
+        });
+-----------------------------------------------------------------------------------------------
+
+
+4- Firebase /  Cloud FireStore:
+===============================
+-FireBase Activation : Tool > Firebase > RealTime DataBase > Select Project   #Done
+-Cloud FireStore Activation : https://console.firebase.google.com/
+      -> Select Previous Project : Database > Activate Beta Cloud FireStore
+
+
+-Add data to FireStore:
+  ++final FirebaseFirestore db = FirebaseFirestore.getInstance();
+ --------------------------------------------------------------------------------------------
+ db.collection("infos_places")  //Collection
+                        .add(info)
+                        .addOnSuccessListener(new OnSuccessListener<DocumentReference>() {
+                            @Override
+                            public void onSuccess(DocumentReference documentReference) {
+                                Toast.makeText(MainActivity.this, "Success", Toast.LENGTH_SHORT).show();
+                                Log.d("Success", "DocumentSnapshot added with ID: " + documentReference.getId());
+                            }
+                        })
+                        .addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(MainActivity.this, "Fail", Toast.LENGTH_SHORT).show();
+                                Log.w("Fail", "Error adding document", e);
+                            }
+                        });
+ --------------------------------------------------------------------------------------------
+
+-Retrieve data from FireStore:
+ -------------------------------------------------------------------------------------------------
+  final FirebaseFirestore db = FirebaseFirestore.getInstance();
+        db.collection("infos_places")
+                .get()
+                .addOnCompleteListener(new OnCompleteListener<QuerySnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<QuerySnapshot> task) {
+                        if (task.isSuccessful()) {
+                            for (DocumentSnapshot document : task.getResult()) {
+//                                Log.e("success query", document.getId() + " => " + document.getData());
+
+
+                                /** Split LatLng into 2 double **/
+                                String[] latlong =  document.getString("latlng").toString().split(",");
+                                double latitude = Double.parseDouble(latlong[0]);
+                                double longitude = Double.parseDouble(latlong[1]);
+
+                                /** get Name & Address **/
+                                String name = document.getString("name").toString();
+                                String address = document.getString("address").toString();
+
+                                /** Call method addMarker **/
+                                addMarker(name,address,latitude,longitude);
+                            }
+                        } else {
+                            Log.e("fail query", "Error getting documents: ", task.getException());
+                        }
+                    }
+                });
+ ---------------------------------------------------------------------------------------------------
+
+-Create method to add marker:
+ ----------------------------------------------------------------------------------
+ public void addMarker(String name,String address,double lat, double lng){
+        LatLng marker = new LatLng(lat,lng);
+        mMap.addMarker(new MarkerOptions().position(marker).title(name).snippet(address));
+    }
+ ----------------------------------------------------------------------------------   
+
+
+											<<<<<<<< <|°_°|> >>>>>>>>>
+

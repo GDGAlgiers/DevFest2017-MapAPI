@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.gdgalgeria.testdevfest.tesdevfest.MainActivity"
+    android:background="@drawable/bg">
+
+
+    <!-- Places Auto complete -->
+    <fragment
+        android:id="@+id/place_autocomplete_fragment"
+        android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="33dp"
+        tools:ignore="MissingConstraints"
+        android:layout_marginTop="20dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="#c86b6a6a"
+        android:layout_marginTop="1dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        />
+
+    <!-- Button to add data to FireStore -->
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center">
+    <Button
+        android:id="@+id/btn_db"
+        android:layout_width="160dp"
+        android:layout_height="50dp"
+        android:text="Add to FireStore"
+        android:layout_marginTop="25dp"
+        android:textColor="#fff"
+        android:background="@drawable/text_selector"
+        tools:ignore="MissingConstraints" />
+
+    <!-- Button to view on Map -->
+    <Button
+        android:id="@+id/btn_map"
+        android:layout_width="130dp"
+        android:layout_height="50dp"
+        android:layout_marginTop="25dp"
+        android:text="View On Map"
+        android:textColor="#fff"
+        android:background="@drawable/text_selector"
+        tools:ignore="MissingConstraints" />
+
+    </LinearLayout>
+
+    <ImageView
+        android:layout_gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="100dp"
+        android:layout_marginTop="50dp"
+        android:src="@drawable/logo"/>
+
+</LinearLayout>
